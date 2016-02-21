@@ -1,7 +1,7 @@
 album-dl.log
-temp*
-temp/*
-temp/
+albumdownloader/temp*
+albumdownloader/temp/*
+albumdownloader/temp/
 AlbumDownloader.egg-info/
 build/
 dist/
