@@ -5,11 +5,9 @@ import sys
 import requests
 import re
 import xml.etree.cElementTree as ET
-import youtube_dl
 from mutagen.easymp4 import EasyMP4
 from mutagen.mp4 import MP4
 from mutagen.id3 import ID3, TIT2
-import eyed3
 import json
 import base64
 import unicodedata
@@ -58,21 +56,21 @@ def clean_temp_folder():
 def update_status(song, track_number, status, type=None):
     sys.stdout.write("\033[2K") # Clear to the end of line
     line_to_print = ''
-    
+
     if type == 'success':
         line_to_print = bcolors.OKGREEN
-        
+
     if type == 'error':
         line_to_print = bcolors.FAIL
-        
+
     if type == 'warning':
         line_to_print = bcolors.WARNING
-        
+
     line_to_print += '\r' + track_number + ' - ' + song_name + '  : ' + status
-    
+
     if type != None:
         line_to_print += bcolors.ENDC
-        
+
     printf(line_to_print)
 
 def parse_arg():
@@ -82,7 +80,7 @@ def parse_arg():
     parser.add_argument('-A', dest='album', action='store',
                     help='the album to be downloaded', required=True)
     parser.add_argument('--version', action='version', version='Album Downloader Version 0.1 by Ronan Gaillard')
-    return parser.parse_args()   
+    return parser.parse_args()
 
 
 def removeDisallowedFilenameChars(filename):
@@ -94,79 +92,79 @@ def get_url_of_song(songname):
     success = False
     retry = 0
     r = None
-    
+
     while not success and retry <5:
         payload = {'search_query': songname}
         try:
             r = requests.get('http://www.youtube.com/results', params=payload)
-        
+
             if r.status_code == requests.codes.ok:
                 success = True
         except Exception as inst:
             update_status(song ,track_number, 'Retrying to fetch video url', 'warning')
         retry += 1
-        
+
     if retry >= 5:
         return None
-        
+
     search_results = re.findall(r'href=\"\/watch\?v=(.{11})', r.text)
     return "http://www.youtube.com/watch?v=" + search_results[0]
-    
- 
+
+
 def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     clean_temp_folder() #clean temp folder to avoid that youtube-dl thinks the video has already been downloaded
-    #Adds a 0 for the 9 first songs to make a nice file name ;)        
+    #Adds a 0 for the 9 first songs to make a nice file name ;)
     if len(track_number) == 1:
         formatted_track_number = '0' + track_number
     else:
         formatted_track_number = track_number
-        
-        
+
+
     song = unicode(song)
     artist_directory = ''
     album_directory = ''
     absolute_file_path = ''
     home = expanduser("~")
-    #Create directories of artis and album if not exists
+    #Create directories of artist and album if not exists
     if sys.platform == 'win32':
         artist_directory = home + u'\\Music\\' + artist
         album_directory = home + u'\\Music\\' + artist + '\\' + album
         absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
     else:
         artist_directory = home + u'/Music/' + artist
-        album_directory = home + u'/Music' + artist + '/' + album
+        album_directory = home + u'/Music/' + artist + '/' + album
         absolute_file_path = album_directory + '/' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
 
     command_line = 'youtube-dl '
-    command_line += '-o '+temp_folder+'temp.%(ext)s '
+    command_line += '-o "'+temp_folder+'temp.%(ext)s" '
     command_line += '-f bestaudio '
     if sys.platform == 'win32': #needs win fix because of a bug in youtube-dl which does not put double quotes around filename on windows
         command_line += '--exec "win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
     else:
-         command_line += '--exec "ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
+        command_line += '--exec "ffmpeg -i {} -vn -c:a aac -strict -2 -y '+temp_folder+'temp.m4a " '
     command_line += videourl
-    
 
-    
+    #print command_line
+
     if not os.path.exists(artist_directory):
         os.makedirs(artist_directory)
-        
+
     if not os.path.exists(album_directory):
         os.makedirs(album_directory)
-        
+
     result = -1
     retry = 0
-    
+
     while result != 0 and retry < 5: 
         #result = os.system(command_line)
-        youtubedl_command = Popen(command_line, stdout=PIPE, stderr=STDOUT)
+        youtubedl_command = Popen(command_line, stdout=PIPE, stderr=STDOUT, shell=True)
         stdout, nothing = youtubedl_command.communicate()    
 
         with open('album-dl.log', 'w') as log:
             log.write(stdout)
-        
+
         result = youtubedl_command.returncode
-       
+        
         retry += 1
         
         update_status(song ,track_number, 'Retrying to download', 'warning')
