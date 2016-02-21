@@ -18,6 +18,7 @@ import argparse
 from subprocess import Popen, PIPE, STDOUT
 
 LAST_FM_API_KEY = '739148a56b222644ce68c68e3851b55a'
+temp_folder = '.\\temp\\'
 
 class bcolors:
     HEADER = '\033[95m'
@@ -33,6 +34,19 @@ validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 def printf(text):
     sys.stdout.write(text)
+    
+def clean_temp_folder():
+
+    if not os.path.exists(temp_folder):
+        os.makedirs(temp_folder)
+        
+    for the_file in os.listdir(temp_folder):
+        file_path = os.path.join(temp_folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception, e:
+            pass
 
 def update_status(song, track_number, status, type=None):
     sys.stdout.write("\033[2K") # Clear to the end of line
@@ -76,11 +90,13 @@ def get_url_of_song(songname):
     
     while not success and retry <5:
         payload = {'search_query': songname}
-        r = requests.get('http://www.youtube.com/results', params=payload)
+        try:
+            r = requests.get('http://www.youtube.com/results', params=payload)
         
-        if r.status_code == requests.codes.ok:
-            success = True
-            
+            if r.status_code == requests.codes.ok:
+                success = True
+        except Exception as inst:
+            update_status(song ,track_number, 'Retrying to fetch video url', 'warning')
         retry += 1
         
     if retry >= 5:
@@ -91,6 +107,7 @@ def get_url_of_song(songname):
     
  
 def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
+    clean_temp_folder() #clean temp folder to avoid that youtube-dl thinks the video has already been downloaded
     #Adds a 0 for the 9 first songs to make a nice file name ;)        
     if len(track_number) == 1:
         formatted_track_number = '0' + track_number
@@ -104,9 +121,9 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
 
     command_line = 'youtube-dl '
-    command_line += '-o temp.%(ext)s '
+    command_line += '-o '+temp_folder+'temp.%(ext)s '
     command_line += '-f bestaudio '
-    command_line += '--exec "ffmpeg -i {} -vn -c:a libvo_aacenc -y temp.m4a " '
+    command_line += '--exec "win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
     command_line += videourl
     
 
@@ -137,12 +154,17 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     if retry == 5:
         update_status(song ,track_number, 'FATAL ERROR : Unable to download', 'error')
         return
-        
-    if os.path.exists(absolute_file_path):
-        os.remove(absolute_file_path)
     
     update_status(song ,track_number, 'Moving to right folder')
-    os.rename("temp.m4a", absolute_file_path)
+        
+    try:
+        os.remove(absolute_file_path)
+    except OSError as e:
+        if os.path.isfile(absolute_file_path): 
+            update_status(song ,track_number, 'Unable to replace song, the file alredy exists and cannot be deleted, skipping', 'error')
+            return
+        
+    os.rename(temp_folder+"temp.m4a", absolute_file_path)
         
     update_status(song ,track_number, 'Tagging song')
     audio = MP4(absolute_file_path)
