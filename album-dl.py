@@ -16,9 +16,16 @@ import unicodedata
 import string
 import argparse
 from subprocess import Popen, PIPE, STDOUT
+from os.path import expanduser
+
+
 
 LAST_FM_API_KEY = '739148a56b222644ce68c68e3851b55a'
-temp_folder = '.\\temp\\'
+temp_folder = ''
+if sys.platform == 'win32':
+    temp_folder = '.\\temp\\'
+else:
+    temp_folder = './temp/'
 
 class bcolors:
     HEADER = '\033[95m'
@@ -114,16 +121,29 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     else:
         formatted_track_number = track_number
         
-    #Create directories of artis and album if not exists
-    artist_directory = u'C:\\Users\\Ronan\\Music\\' + artist
-    album_directory = u'C:\\Users\\Ronan\\Music\\' + artist + '\\' + album
+        
     song = unicode(song)
-    absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
+    artist_directory = ''
+    album_directory = ''
+    absolute_file_path = ''
+    home = expanduser("~")
+    #Create directories of artis and album if not exists
+    if sys.platform == 'win32':
+        artist_directory = home + u'\\Music\\' + artist
+        album_directory = home + u'\\Music\\' + artist + '\\' + album
+        absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
+    else:
+        artist_directory = home + u'/Music/' + artist
+        album_directory = home + u'/Music' + artist + '/' + album
+        absolute_file_path = album_directory + '/' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
 
     command_line = 'youtube-dl '
     command_line += '-o '+temp_folder+'temp.%(ext)s '
     command_line += '-f bestaudio '
-    command_line += '--exec "win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
+    if sys.platform == 'win32': #needs win fix because of a bug in youtube-dl which does not put double quotes around filename on windows
+        command_line += '--exec "win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
+    else:
+         command_line += '--exec "ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
     command_line += videourl
     
 
