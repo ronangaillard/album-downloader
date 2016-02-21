@@ -1,3 +1,0 @@
-[console_scripts]
-album-dl = albumdownloader.__main__:main
-

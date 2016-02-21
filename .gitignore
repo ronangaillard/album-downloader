@@ -1,0 +1,7 @@
+album-dl.log
+temp*
+temp/*
+temp/
+AlbumDownloader.egg-info/
+build/
+dist/
