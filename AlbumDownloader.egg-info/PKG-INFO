@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: AlbumDownloader
+Version: 0.1.0
+Summary: Python application to download full music albums using LastFM and Youtube
+Home-page: http://ronan.gaillard.free.fr
+Author: Ronan_Gaillard
+Author-email: ronan.gaillard@supelec.fr
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

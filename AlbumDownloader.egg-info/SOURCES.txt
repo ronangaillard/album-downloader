@@ -1,0 +1,10 @@
+setup.py
+AlbumDownloader.egg-info/PKG-INFO
+AlbumDownloader.egg-info/SOURCES.txt
+AlbumDownloader.egg-info/dependency_links.txt
+AlbumDownloader.egg-info/entry_points.txt
+AlbumDownloader.egg-info/requires.txt
+AlbumDownloader.egg-info/top_level.txt
+albumdownloader/__init__.py
+albumdownloader/__main__.py
+albumdownloader/album-dl.py

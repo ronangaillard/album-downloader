@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!C:\Python27\python.exe
 
 import os
 import sys
@@ -20,10 +20,6 @@ from os.path import expanduser
 
 LAST_FM_API_KEY = '739148a56b222644ce68c68e3851b55a'
 temp_folder = ''
-if sys.platform == 'win32':
-    temp_folder = '.\\temp\\'
-else:
-    temp_folder = './temp/'
 
 class bcolors:
     HEADER = '\033[95m'
@@ -36,6 +32,10 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+
+
+main()
+
 
 def printf(text):
     sys.stdout.write(text)
@@ -195,38 +195,45 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     
     update_status(song ,track_number, 'Done !', 'success')
 
-#to deal with xml encoded in UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
-args = parse_arg()
-
-print 'Contacting Last.fm to get album info...'
-payload = {'api_key': LAST_FM_API_KEY, 'artist': args.artist, 'album': args.album}
-response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo', payload)
-tree = ET.ElementTree(ET.fromstring(response.text))
-
-print 'Album information :'
-album = tree.find('album/name').text
-artist = tree.find('album/artist').text
-nb_of_tracks = len(tree.find('album/tracks'))
-
-print 'Album :', album
-print 'Artist :', artist
-print 'Number of tracks :', nb_of_tracks
-
-print 'Album songs :'
-for song in tree.find('album/tracks'):
-    song_name = song.find('name').text
-    track_number = song.attrib['rank']
-    update_status(song, track_number , 'Getting url of song...')
-    songurl = get_url_of_song(artist + ' ' + song_name)
-    if songurl == None:
-        update_status(song, track_number , 'Unable to fetch url of song video after multiple retries', 'error')
-        break
-    update_status(song, track_number , 'Downloading and converting song')
-    download_video(songurl, artist, album, song_name, track_number, nb_of_tracks)
-    printf('\n')
+def main():
     
+    if sys.platform == 'win32':
+        temp_folder = '.\\temp\\'
+    else:
+        temp_folder = './temp/'
+        
+    #to deal with xml encoded in UTF-8
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
+    args = parse_arg()
+
+    print 'Contacting Last.fm to get album info...'
+    payload = {'api_key': LAST_FM_API_KEY, 'artist': args.artist, 'album': args.album}
+    response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo', payload)
+    tree = ET.ElementTree(ET.fromstring(response.text))
+
+    print 'Album information :'
+    album = tree.find('album/name').text
+    artist = tree.find('album/artist').text
+    nb_of_tracks = len(tree.find('album/tracks'))
+
+    print 'Album :', album
+    print 'Artist :', artist
+    print 'Number of tracks :', nb_of_tracks
+
+    print 'Album songs :'
+    for song in tree.find('album/tracks'):
+        song_name = song.find('name').text
+        track_number = song.attrib['rank']
+        update_status(song, track_number , 'Getting url of song...')
+        songurl = get_url_of_song(artist + ' ' + song_name)
+        if songurl == None:
+            update_status(song, track_number , 'Unable to fetch url of song video after multiple retries', 'error')
+            break
+        update_status(song, track_number , 'Downloading and converting song')
+        download_video(songurl, artist, album, song_name, track_number, nb_of_tracks)
+        printf('\n')
+        
     
     
