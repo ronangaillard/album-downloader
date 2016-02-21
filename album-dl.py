@@ -1,10 +1,5 @@
 #!/usr/bin/python
 
-#Application name	GetAlbumInf
-#API key	739148a56b222644ce68c68e3851b55a
-#Shared secret	6359190e1015fea04aa8ea1ae75f93a3
-#Registered to	CelteekFm
-
 import os
 import sys
 import requests
@@ -19,10 +14,21 @@ import json
 import base64
 import unicodedata
 import string
+import argparse
+
+LAST_FM_API_KEY = '739148a56b222644ce68c68e3851b55a'
 
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 
+def parse_arg():
+    parser = argparse.ArgumentParser(description='Download full music album from the web')
+    parser.add_argument('-a', dest='artist', action='store',
+                    help='the artist of the album to be downloaded', required=True)
+    parser.add_argument('-A', dest='album', action='store',
+                    help='the album to be downloaded', required=True)
+    parser.add_argument('--version', action='version', version='Album Downloader Version 0.1 by Ronan Gaillard')
+    return parser.parse_args()   
 
 
 def removeDisallowedFilenameChars(filename):
@@ -36,48 +42,6 @@ def get_url_of_song(songname):
     search_results = re.findall(r'href=\"\/watch\?v=(.{11})', r.text)
     return "http://www.youtube.com/watch?v=" + search_results[0]
     
-def my_hook(d):
-    if d['status'] == 'finished':
-        print('\t\tDone downloading, now converting ...')
-#A list of functions that get called on download
-#                       progress, with a dictionary with the entries
-#                       * status: One of "downloading", "error", or "finished".
-#                                 Check this first and ignore unknown values.
-#                       If status is one of "downloading", or "finished", the
-#                       following properties may also be present:
-#                       * filename: The final filename (always present)
-#                       * tmpfilename: The filename we're currently writing to
-#                       * downloaded_bytes: Bytes on disk
-#                       * total_bytes: Size of the whole file, None if unknown
-#                       * total_bytes_estimate: Guess of the eventual file size,
-#                                               None if unavailable.
-#                       * elapsed: The number of seconds since download started.
-#                       * eta: The estimated time in seconds, None if unknown
-#                       * speed: The download speed in bytes/second, None if
-#                                unknown
-#                       * fragment_index: The counter of the currently
-#                                         downloaded video fragment.
-#                       * fragment_count: The number of fragments (= individual
-#                                         files that will be merged)
-        
-class MyLogger(object):
-    def debug(self, msg):
-        pass
-
-    def warning(self, msg):
-        pass
-
-    def error(self, msg):
-        print(msg)
-        
-def download_file(url, filename):
-    # NOTE the stream=True parameter
-    r = requests.get(url, stream=True)
-    with open(filename, 'wb') as f:
-        for chunk in r: 
-            if chunk: # filter out keep-alive new chunks
-                f.write(chunk)
-                #f.flush() commented by recommendation from J.F.Sebastian
  
 def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     #Adds a 0 for the 9 first songs to make a nice file name ;)        
@@ -93,10 +57,6 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
 
     command_line = 'youtube-dl '
-    #command_line += '-x ' #extract audio
-    #command_line += '--audio-format aac ' #format is mp3
-    #command_line += '-o "' + absolute_file_path +'" ' #file output
-    #command_line += '--audio-quality 0 ' #best audio quality
     command_line += '-o temp.%(ext)s '
     command_line += '-f bestaudio '
     command_line += '--exec "ffmpeg -i {} -vn -c:a libvo_aacenc -y temp.m4a " '
@@ -131,27 +91,6 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     
     print 'moving from temp.m4a to ' + absolute_file_path
     os.rename("temp.m4a", absolute_file_path)
-    #print '\t\tGetting url of mp3...'
-    #response = requests.get('http://www.youtubeinmp3.com/fetch/?format=text&video=http://www.youtube.com/watch?v=i62Zjga8JOM')
-    #url = response.text[response.text.index('Link:')::]
-    #url = url[6::]
-    #print url
-    
-    #print '\t\tDownloading mp3...'
-    #download_file(videourl, absolute_file_path)
-    #ydl_opts = {
-    #    'format': 'bestaudio/best',
-    #    'outtmpl': absolute_file_path,
-    #    'postprocessors': [{
-    #        'key': 'FFmpegExtractAudio',
-    #        'preferredcodec': 'mp3',
-    #        'preferredquality': '320',
-    #    }],
-    #    'logger': MyLogger(),
-    #    'progress_hooks': [my_hook],
-    #}
-    #with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-    #    ydl.download([videourl])
         
     print '\t\tTagging : ' + absolute_file_path
     audio = MP4(absolute_file_path)
@@ -161,18 +100,20 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     audio['aART'] = artist #album artist
     audio['trkn'] = [(int(track_number), nb_of_tracks)]
     audio.save()
-    
 
-        
-    #print 'id31 -v -a "' + artist + '" -t "' + song + '" -l "'+ album + '" -n ' + track_number + ' "' + absolute_file_path + '"'
-    
-    #os.system('id31 -v -a "' + artist + '" -t "' + song + '" -l "'+ album + '" -n ' + track_number + ' "' + absolute_file_path + '"')
 #to deal with xml encoded in UTF-8
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+args = parse_arg()
+
+print 'Desired artist : ' + args.artist
+print 'Desired artist : ' + args.album
+
 print 'Contacting Last.fm to get album info...'
-response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo&api_key=739148a56b222644ce68c68e3851b55a&artist=daft%20punk&album=human%20after%20all')
+payload = {'api_key': LAST_FM_API_KEY, 'artist': args.artist, 'album': args.album}
+
+response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo', payload)
 print 'Done, parsing...'
 tree = ET.ElementTree(ET.fromstring(response.text))
 print 'Album information :'
