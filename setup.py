@@ -26,7 +26,10 @@ setup(
     #
     # license="LICENSE.txt",
     description="Python application to download full music albums using LastFM and Youtube",
-
+    
+    package_data = {
+        'albumdownloader': ['*.bat'],
+    },
     # long_description=open("README.txt").read(),
 
     # Dependent packages (distributions)

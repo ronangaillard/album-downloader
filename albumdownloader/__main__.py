@@ -20,6 +20,7 @@ from os.path import expanduser
 
 LAST_FM_API_KEY = '739148a56b222644ce68c68e3851b55a'
 temp_folder = ''
+app_folder = ''
 
 class bcolors:
     HEADER = '\033[95m'
@@ -42,6 +43,7 @@ def printf(text):
     sys.stdout.write(text)
     
 def clean_temp_folder():
+    global temp_folder 
 
     if not os.path.exists(temp_folder):
         os.makedirs(temp_folder)
@@ -54,7 +56,7 @@ def clean_temp_folder():
         except Exception, e:
             pass
 
-def update_status(song, track_number, status, type=None):
+def update_status(song_title, track_number, status, type=None):
     sys.stdout.write("\033[2K") # Clear to the end of line
     line_to_print = ''
 
@@ -67,7 +69,7 @@ def update_status(song, track_number, status, type=None):
     if type == 'warning':
         line_to_print = bcolors.WARNING
 
-    line_to_print += '\r' + track_number + ' - ' + song_name + '  : ' + status
+    line_to_print += '\r' + track_number + ' - ' + song_title + '  : ' + status
 
     if type != None:
         line_to_print += bcolors.ENDC
@@ -140,7 +142,7 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     command_line += '-o "'+temp_folder+'temp.%(ext)s" '
     command_line += '-f bestaudio '
     if sys.platform == 'win32': #needs win fix because of a bug in youtube-dl which does not put double quotes around filename on windows
-        command_line += '--exec "win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
+        command_line += '--exec "'+ app_folder + 'win_fix.bat ffmpeg -i {} -vn -c:a libvo_aacenc -y '+temp_folder+'temp.m4a " '
     else:
         command_line += '--exec "ffmpeg -i {} -vn -c:a aac -strict -2 -y '+temp_folder+'temp.m4a " '
     command_line += videourl
@@ -161,7 +163,7 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
         youtubedl_command = Popen(command_line, stdout=PIPE, stderr=STDOUT, shell=True)
         stdout, nothing = youtubedl_command.communicate()    
 
-        with open('album-dl.log', 'w') as log:
+        with open(temp_folder + 'album-dl.log', 'w') as log:
             log.write(stdout)
 
         result = youtubedl_command.returncode
@@ -195,13 +197,41 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     audio.save()
     
     update_status(song ,track_number, 'Done !', 'success')
+    
+def check_for_bat_file():
+###For windows only : checks if the bat file containing the bat fix is present
+###Very dirty...
+    if not os.path.isfile(app_folder + 'win_fix.bat'):
+        content = '@echo off\r\n'
+        content += 'set str=%*\r\n'
+        content += 'set str=%str:\'="%\r\n'
+        content += '%str%'
+        
+        f = open(app_folder + 'win_fix.bat', 'w')
+        f.write(content)
+        f.close()
+     
+
 
 def main(args=None):
+    home = expanduser("~")
+    global temp_folder 
+    global app_folder
     
     if sys.platform == 'win32':
-        temp_folder = '.\\temp\\'
+        app_folder = home + '\\albumdownloader\\'
+        temp_folder = app_folder + 'temp\\'  
+ 
     else:
-        temp_folder = './temp/'
+        app_folder = home + '/.albumdownloader/'
+        temp_folder = app_folder + 'temp/'
+        
+
+    if not os.path.exists(app_folder):
+        os.makedirs(app_folder)
+
+    if sys.platform == 'win32':
+        check_for_bat_file()
         
     #to deal with xml encoded in UTF-8
     reload(sys)
@@ -227,12 +257,12 @@ def main(args=None):
     for song in tree.find('album/tracks'):
         song_name = song.find('name').text
         track_number = song.attrib['rank']
-        update_status(song, track_number , 'Getting url of song...')
+        update_status(song_name , track_number , 'Getting url of song...')
         songurl = get_url_of_song(artist + ' ' + song_name)
         if songurl == None:
             update_status(song, track_number , 'Unable to fetch url of song video after multiple retries', 'error')
             break
-        update_status(song, track_number , 'Downloading and converting song')
+        update_status(song_name, track_number , 'Downloading and converting song')
         download_video(songurl, artist, album, song_name, track_number, nb_of_tracks)
         printf('\n')
         
