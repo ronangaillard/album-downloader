@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     # Application name:
-    name="AlbumDownloader",
+    name="album-dl",
 
     # Version number (initial):
     version="0.1.0",
@@ -26,15 +26,12 @@ setup(
     #
     # license="LICENSE.txt",
     description="Python application to download full music albums using LastFM and Youtube",
-    
-    package_data = {
-        'albumdownloader': ['*.bat'],
-    },
-    # long_description=open("README.txt").read(),
 
     # Dependent packages (distributions)
     install_requires=[
-        "requests"
+        "requests",
+        "mutagen",
+        "youtube-dl"
     ],
     
     entry_points = {
