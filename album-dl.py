@@ -16,6 +16,18 @@ from mutagen.mp4 import MP4
 from mutagen.id3 import ID3, TIT2
 import eyed3
 import json
+import base64
+import unicodedata
+import string
+
+validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+
+
+
+
+def removeDisallowedFilenameChars(filename):
+    cleanedFilename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore')
+    return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
 
 def get_url_of_song(songname):
@@ -77,14 +89,16 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     #Create directories of artis and album if not exists
     artist_directory = u'C:\\Users\\Ronan\\Music\\' + artist
     album_directory = u'C:\\Users\\Ronan\\Music\\' + artist + '\\' + album
-    absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' + song +'.m4a'
-    
+    song = unicode(song)
+    absolute_file_path = album_directory + '\\' + formatted_track_number + ' ' +  removeDisallowedFilenameChars(song) +'.m4a' #making a filesafe name
+
     command_line = 'youtube-dl '
     #command_line += '-x ' #extract audio
     #command_line += '--audio-format aac ' #format is mp3
     #command_line += '-o "' + absolute_file_path +'" ' #file output
     #command_line += '--audio-quality 0 ' #best audio quality
     command_line += '-o temp.%(ext)s '
+    command_line += '-f bestaudio '
     command_line += '--exec "ffmpeg -i {} -vn -c:a libvo_aacenc -y temp.m4a " '
     command_line += videourl
     
@@ -99,8 +113,23 @@ def download_video(videourl, artist, album, song, track_number, nb_of_tracks):
     
         
     print command_line
-    os.system(command_line)
     
+    result = -1
+    retry = 0
+    
+    while result != 0 and retry < 5: 
+        result = os.system(command_line)
+       
+        retry += 1
+        
+    if retry == 5:
+        print 'FATAL ERROR : Unable to download : ' +song
+        return
+        
+    if os.path.exists(absolute_file_path):
+        os.remove(absolute_file_path)
+    
+    print 'moving from temp.m4a to ' + absolute_file_path
     os.rename("temp.m4a", absolute_file_path)
     #print '\t\tGetting url of mp3...'
     #response = requests.get('http://www.youtubeinmp3.com/fetch/?format=text&video=http://www.youtube.com/watch?v=i62Zjga8JOM')
@@ -143,7 +172,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 print 'Contacting Last.fm to get album info...'
-response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo&api_key=739148a56b222644ce68c68e3851b55a&artist=daft%20punk&album=discovery')
+response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo&api_key=739148a56b222644ce68c68e3851b55a&artist=daft%20punk&album=human%20after%20all')
 print 'Done, parsing...'
 tree = ET.ElementTree(ET.fromstring(response.text))
 print 'Album information :'
