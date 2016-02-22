@@ -3,7 +3,7 @@
 album-dl is a small python utility that helps you download full music albums from the web easily.
 
 ### Version
-0.1.0
+0.2.0
 
 ### Usage
 ```sh
@@ -87,5 +87,3 @@ There are no known bugs, but there may be issues with the encoder selected with 
 ### History
 
 * 0.2.0 : Added viewing of top albums of a choosen artist, fixed a bug that would make the script crash if album was not found on last.fm
-
-
