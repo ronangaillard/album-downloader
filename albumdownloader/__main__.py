@@ -78,7 +78,7 @@ def parse_arg():
     parser.add_argument('-a', dest='artist', action='store',
                     help='the artist of the album to be downloaded', required=True)
     parser.add_argument('-A', dest='album', action='store',
-                    help='the album to be downloaded', required=True)
+                    help='the album to be downloaded', default=None)
     parser.add_argument('--version', action='version', version='Album Downloader Version 0.1 by Ronan Gaillard')
     return parser.parse_args()
 
@@ -207,7 +207,26 @@ def check_for_bat_file():
         f = open(app_folder + 'win_fix.bat', 'w')
         f.write(content)
         f.close()
-     
+
+#Lists top albums of the given artist
+def list_albums(artist):
+    album_list = []
+    payload = {'api_key': LAST_FM_API_KEY, 'artist': artist}
+    response = requests.get('http://ws.audioscrobbler.com/2.0/?method=artist.getTopAlbums', payload)
+    
+    album_tree = ET.ElementTree(ET.fromstring(response.text))
+    
+    if album_tree.getroot().attrib['status'] != 'ok':
+        #Then album has not been found
+        error_code = int(album_tree.find('error').attrib['code'])
+        printf(bcolors.FAIL + 'Error : ' + album_tree.find('error').text + bcolors.ENDC)
+        exit()
+
+    for album in album_tree.findall('topalbums/album'):
+        album_list.append( album.find('name').text.encode(sys.stdout.encoding, errors='replace'))
+        #album_list.append('hello')
+    
+    return [album_tree.find('topalbums').attrib['artist'], album_list]          
 
 
 def main(args=None):
@@ -235,6 +254,17 @@ def main(args=None):
     sys.setdefaultencoding('utf-8')
 
     args = parse_arg()
+    
+    if args.album == None:
+        [corrected_artist, album_list] = list_albums(args.artist)
+        print 'Here are the top albums for', corrected_artist
+        
+        for i in range(0,9):
+            print album_list[i]
+        
+        print'\nYou can download them using the -A option'
+        
+        return
 
     print 'Contacting Last.fm to get album info...'
     payload = {'api_key': LAST_FM_API_KEY, 'artist': args.artist, 'album': args.album}
