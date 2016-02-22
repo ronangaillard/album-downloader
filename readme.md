@@ -7,7 +7,7 @@ album-dl is a small python utility that helps you download full music albums fro
 
 ### Usage
 ```sh
-album-dl [-h] -a ARTIST -A ALBUM [--version]
+usage: __main__.py [-h] -a ARTIST [-A ALBUM] [--version]
 ```
 Arguments:
 * -h, --help  show this help message and exit
@@ -24,6 +24,12 @@ album-dl -a "Daft Punk" -A "Discovery"
 Album will be stored in your default music folder with a nice folder architecture : "~/Music/ARTIST/ALBUM" on UNIX like systems or in "C:\Users\YOUR_NAME\Music\ARTIST\ALBUM" on Windows.
 
 Music files will be tagged with the right information (artist, album and song name), and files will be in the aac format.
+
+You can also only precise the artist name to view its most popular albums :
+
+```sh
+album-dl -a "Daft Punk"
+```
 
 ### Tech
 
@@ -76,6 +82,10 @@ $ pip install album-dl
 
 ### Bugs
 
-There are some known bugs :
-* If album is not found the script will crash
+There are no known bugs, but there may be issues with the encoder selected with ffmpeg, code needs to dynamicaly choose the encoder
+
+### History
+
+* 0.2.0 : Added viewing of top albums of a choosen artist, fixed a bug that would make the script crash if album was not found on last.fm
+
 

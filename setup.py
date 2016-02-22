@@ -6,7 +6,7 @@ setup(
     name="album-dl",
 
     # Version number (initial):
-    version="0.1.0",
+    version="0.2.0",
 
     # Application author details:
     author="Ronan_Gaillard",
