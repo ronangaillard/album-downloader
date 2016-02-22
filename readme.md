@@ -7,18 +7,18 @@ album-dl is a small python utility that helps you download full music albums fro
 
 ### Usage
 ```sh
-usage: __main__.py [-h] -a ARTIST [-A ALBUM] [--version]
+$ __main__.py [-h] -a ARTIST [-A ALBUM] [--version]
 ```
 Arguments:
 * -h, --help  show this help message and exit
 * -a ARTIST   the artist of the album to be downloaded
-* -A ALBUM    the album to be downloaded
+* -A ALBUM    the album to be downloaded (if not filled, nothing will be downloaded but the script will show most popular albums of filled artist)
 * --version   show program's version number and exit
 
 Example :
 
 ```sh
-album-dl -a "Daft Punk" -A "Discovery"
+$ album-dl -a "Daft Punk" -A "Discovery"
 ```
 
 Album will be stored in your default music folder with a nice folder architecture : "~/Music/ARTIST/ALBUM" on UNIX like systems or in "C:\Users\YOUR_NAME\Music\ARTIST\ALBUM" on Windows.
@@ -28,7 +28,7 @@ Music files will be tagged with the right information (artist, album and song na
 You can also only precise the artist name to view its most popular albums :
 
 ```sh
-album-dl -a "Daft Punk"
+$ album-dl -a "Daft Punk"
 ```
 
 ### Tech
