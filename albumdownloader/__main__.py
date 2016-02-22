@@ -35,9 +35,6 @@ class bcolors:
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 
-if __name__ == "__main__":
-    main()
-
 
 def printf(text):
     sys.stdout.write(text)
@@ -243,6 +240,12 @@ def main(args=None):
     payload = {'api_key': LAST_FM_API_KEY, 'artist': args.artist, 'album': args.album}
     response = requests.get('http://ws.audioscrobbler.com/2.0/?method=album.getInfo', payload)
     tree = ET.ElementTree(ET.fromstring(response.text))
+    
+    if tree.getroot().attrib['status'] != 'ok':
+        #Then album has not been found
+        error_code = int(tree.find('error').attrib['code'])
+        printf(bcolors.FAIL + 'Error : ' + tree.find('error').text + bcolors.ENDC)
+        exit()
 
     print 'Album information :'
     album = tree.find('album/name').text
@@ -266,5 +269,8 @@ def main(args=None):
         download_video(songurl, artist, album, song_name, track_number, nb_of_tracks)
         printf('\n')
         
-    
+
+
+if __name__ == "__main__":
+    main()
     

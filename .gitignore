@@ -5,3 +5,4 @@ albumdownloader/temp/
 AlbumDownloader.egg-info/
 build/
 dist/
+album_dl.egg-info/
