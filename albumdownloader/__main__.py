@@ -79,7 +79,7 @@ def parse_arg():
                     help='the artist of the album to be downloaded', required=True)
     parser.add_argument('-A', dest='album', action='store',
                     help='the album to be downloaded', default=None)
-    parser.add_argument('--version', action='version', version='Album Downloader Version 0.2.0 by Ronan Gaillard')
+    parser.add_argument('--version', action='version', version='Album Downloader Version 0.2.1 by Ronan Gaillard')
     return parser.parse_args()
 
 
