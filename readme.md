@@ -41,9 +41,6 @@ album-dl uses a number of open source projects to work properly:
 * [request] - a python library to easily make web requests
 * [Last.fm API] -to retrieve album info like track list for instance
 
-And of course album-dl itself is open source with a [public repository][https://bitbucket.org/ronangaillard/album-downloader]
- on BitBucket .
-
 ### Installation
 
 You need python, as well as pip, and ffmpef installed of course.
